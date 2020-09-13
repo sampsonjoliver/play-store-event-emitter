@@ -19,7 +19,7 @@ Resources:
         CloudWatchEvent:
           Type: Schedule
           Properties:
-            Name: Play Store app polling rate
+            Name: PlayStore-app-poll-rate
             Schedule: rate(5 minutes)
       MemorySize: 128
       Timeout: 100
