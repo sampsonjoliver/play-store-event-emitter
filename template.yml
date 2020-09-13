@@ -1,0 +1,25 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  play-store-event-emitter
+
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Resources:
+  ScheduledEventLogger:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: A Lambda function that polls the configured Play Store app to watch for latest updates
+      Runtime: nodejs12.x
+      Handler: dist/handlers/scheduled-event-logger.scheduledEventLoggerHandler
+      Events:
+        CloudWatchEvent:
+          Type: Schedule
+          Properties:
+            Name: Play Store app polling rate
+            Schedule: rate(5 minutes)
+      MemorySize: 128
+      Timeout: 100
