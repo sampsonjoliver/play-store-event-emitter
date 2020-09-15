@@ -3,7 +3,9 @@
   "description": "replaced-by-user-input",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "googleapis": "^59.0.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@babel/preset-env": "^7.11.5",
