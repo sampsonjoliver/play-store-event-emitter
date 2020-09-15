@@ -7,7 +7,6 @@ jobs:
     - uses: actions/checkout@v1
     - uses: falnyr/aws-sam-deploy-action@v1.0.0
       env:
-        TEMPLATE: 'template.yaml'
         AWS_STACK_NAME: play-store-event-emitter-sam
         AWS_REGION: 'us-east-1'
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
