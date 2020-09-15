@@ -1,14 +1,26 @@
-// Import all functions from scheduled-event-logger.js
+const mockInsert = jest.fn();
+const mockList = jest.fn();
+jest.mock("../repositories/makePlayStoreRepository", () => ({
+  makePlayStoreRepository: () => ({
+    edits: {
+      insert: mockInsert,
+      tracks: {
+        list: mockList,
+      },
+    },
+  }),
+}));
+
 import * as scheduledEventLogger from "./scheduled-event-logger";
 
 describe("Test for sqs-payload-logger", function () {
-  // This test invokes the scheduled-event-logger Lambda function and verifies that the received payload is logged
   it("Verifies the payload is logged", async () => {
-    // Mock console.log statements so we can verify them. For more information, see
-    // https://jestjs.io/docs/en/mock-functions.html
-    console.info = jest.fn();
+    mockInsert.mockResolvedValue({
+      data: {
+        id: "theEditId",
+      },
+    });
 
-    // Create a sample payload with CloudWatch scheduled event message format
     var payload = {
       id: "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
       "detail-type": "Scheduled Event",
@@ -22,7 +34,10 @@ describe("Test for sqs-payload-logger", function () {
 
     await scheduledEventLogger.scheduledEventLoggerHandler(payload, null);
 
-    // Verify that console.info has been called with the expected payload
-    expect(console.info).toHaveBeenCalledWith(JSON.stringify(payload));
+    expect(mockInsert).toHaveBeenCalledWith({ packageName: "thePackageName" });
+    expect(mockList).toHaveBeenCalledWith({
+      editId: "theEditId",
+      packageName: "thePackageName",
+    });
   });
 });

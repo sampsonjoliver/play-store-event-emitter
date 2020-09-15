@@ -1,9 +1,6 @@
 import { ScheduledHandler } from "aws-lambda";
 import { makePlayStoreRepository } from "../repositories/makePlayStoreRepository";
 
-/**
- * A Lambda function that logs the payload received from a CloudWatch scheduled event.
- */
 export const scheduledEventLoggerHandler: ScheduledHandler = async (
   event,
   context
