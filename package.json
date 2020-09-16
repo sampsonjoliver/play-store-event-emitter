@@ -3,6 +3,11 @@
   "description": "replaced-by-user-input",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "test": "jest",
+    "build": "rimraf dist && tsc && sam build --manifest ./package.json",
+    "deploy": "sam deploy"
+  },
   "dependencies": {
     "googleapis": "^59.0.0"
   },
@@ -17,10 +22,6 @@
     "prettier": "^2.1.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.0.2"
-  },
-  "scripts": {
-    "test": "jest",
-    "build": "rimraf dist && tsc"
   },
   "jest": {
     "roots": [
