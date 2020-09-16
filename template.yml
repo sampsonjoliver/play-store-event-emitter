@@ -9,6 +9,16 @@ Transform:
   - AWS::Serverless-2016-10-31
 
 Resources:
+  PlayStoreEventEmitterConfigurationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "play-store-event-emitter-${AWS::Region}-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    DeletionPolicy: Delete
+
   ScheduledEventLogger:
     Type: AWS::Serverless::Function
     Properties:
@@ -24,3 +34,10 @@ Resources:
             Schedule: rate(5 minutes)
       MemorySize: 128
       Timeout: 100
+      Environment:
+        Variables:
+          ConfigurationBucketName: !Ref PlayStoreEventEmitterConfigurationBucket
+          PackageName: com.sampsonjoliver.acgpwa
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PlayStoreEventEmitterConfigurationBucket

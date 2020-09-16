@@ -2,12 +2,7 @@ const mockInsert = jest.fn();
 const mockList = jest.fn();
 jest.mock("../repositories/makePlayStoreRepository", () => ({
   makePlayStoreRepository: () => ({
-    edits: {
-      insert: mockInsert,
-      tracks: {
-        list: mockList,
-      },
-    },
+    listTracks: mockList,
   }),
 }));
 
@@ -34,10 +29,6 @@ describe("Test for sqs-payload-logger", function () {
 
     await scheduledEventLogger.scheduledEventLoggerHandler(payload, null);
 
-    expect(mockInsert).toHaveBeenCalledWith({ packageName: "thePackageName" });
-    expect(mockList).toHaveBeenCalledWith({
-      editId: "theEditId",
-      packageName: "thePackageName",
-    });
+    expect(mockList).toHaveBeenCalled();
   });
 });

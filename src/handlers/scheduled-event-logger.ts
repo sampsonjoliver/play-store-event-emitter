@@ -10,13 +10,7 @@ export const scheduledEventLoggerHandler: ScheduledHandler = async (
 
   const client = makePlayStoreRepository();
 
-  const edit = await client.edits.insert({ packageName });
-  const editId = edit.data.id || "";
-
-  const tracks = await client.edits.tracks.list({
-    editId: editId,
-    packageName,
-  });
+  const tracks = await client.listTracks();
 
   console.log({ tracks });
 };
