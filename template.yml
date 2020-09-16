@@ -14,7 +14,8 @@ Resources:
     Properties:
       Description: A Lambda function that polls the configured Play Store app to watch for latest updates
       Runtime: nodejs12.x
-      Handler: dist/handlers/scheduled-event-logger.scheduledEventLoggerHandler
+      CodeUri: dist
+      Handler: handlers/scheduled-event-logger.scheduledEventLoggerHandler
       Events:
         CloudWatchEvent:
           Type: Schedule
