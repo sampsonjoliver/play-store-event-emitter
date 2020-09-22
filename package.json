@@ -10,6 +10,7 @@
     "deploy": "sam deploy"
   },
   "dependencies": {
+    "dynamodb-toolbox": "^0.2.0-beta.1",
     "googleapis": "^59.0.0",
     "graceful-fs": "^4.2.4"
   },
