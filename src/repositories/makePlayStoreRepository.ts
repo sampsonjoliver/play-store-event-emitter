@@ -1,85 +1,92 @@
-import { androidpublisher_v3, google } from "googleapis";
-import { S3 } from "aws-sdk";
-import fs from "graceful-fs";
-import { AuthPlus } from "googleapis/build/src/googleapis";
+import { makeAndroidPublisherApi } from "./makeAndroidPublisherApi";
+import { Release } from "./makeReleaseRepository";
 
-const PLAY_STORE_SCOPE = "https://www.googleapis.com/auth/androidpublisher";
-const CREDENTIALS_FILE_NAME = "credentials.json";
-const CREDENTIALS_FILE_PATH = "/tmp";
+import { memoize } from "../memoize";
 
-let api: androidpublisher_v3.Androidpublisher;
-const makePlayStoreApi = async () => {
-  if (!api) {
-    await fetchCredentialsFile();
-
-    console.log("Starting create GoogleAuth");
-    const auth = new google.auth.GoogleAuth({
-      keyFile: `${CREDENTIALS_FILE_PATH}/${CREDENTIALS_FILE_NAME}`,
-      scopes: [PLAY_STORE_SCOPE],
-    });
-
-    google.options({ auth });
-    console.log("Finished create GoogleAuth");
-
-    api = google.androidpublisher("v3");
-  }
-  return api;
+type PlayStoreRepositoryProps = {
+  packageName: string;
 };
 
-export const makePlayStoreRepository = () => {
-  const packageName = process.env.PackageName as string;
-
-  const startEdit = async () => {
-    const api = await makePlayStoreApi();
-    const edit = await api.edits.insert({ packageName });
-
-    return {
-      api,
-      editId: edit.data.id || "",
-    };
-  };
-  const closeEdit = (editId: string) => {
-    return api.edits.commit({ editId, packageName });
-  };
-
-  const listTracks = async () => {
+export const makePlayStoreRepository = ({
+  packageName,
+}: PlayStoreRepositoryProps) => {
+  const listTrackReleases = async () => {
     console.log("Started listTracks");
-    const { api, editId } = await startEdit();
 
-    const tracks = await api.edits.tracks.list({
+    const api = await makeAndroidPublisherApi();
+    const edit = makePlayStoreEdit({ packageName });
+    const editId = await edit.open();
+
+    const tracksResponse = await api.edits.tracks.list({
       editId,
       packageName,
     });
 
-    await closeEdit(editId);
+    const tracks = tracksResponse.data.tracks ?? [];
+
+    const trackReleases = tracks
+      .map((track) => {
+        const trackName = track.track;
+        const releaseInfo = track.releases?.[0];
+
+        if (!releaseInfo?.name || releaseInfo.status === "draft") {
+          return undefined;
+        }
+
+        const versionCodes = releaseInfo.versionCodes?.join(",");
+
+        const activeRelease =
+          releaseInfo &&
+          ({
+            releaseTrack: trackName,
+            releaseName: `${releaseInfo.name}-${versionCodes}`,
+            status: releaseInfo.status,
+            userFraction: releaseInfo.userFraction,
+            versionCode: versionCodes,
+            versionName: releaseInfo.name,
+          } as Release);
+
+        return activeRelease;
+      })
+      .filter((it) => it !== undefined) as Release[];
+
     console.log("Finished listTracks");
 
-    return tracks;
+    return trackReleases;
   };
 
   return {
-    listTracks,
+    listTrackReleases: listTrackReleases,
   };
 };
 
-const fetchCredentialsFile = async () => {
-  console.log("Started fetch credentials body");
+export const makePlayStoreEdit = memoize(
+  ({ packageName }: PlayStoreRepositoryProps) => {
+    let openEditId: string | undefined;
 
-  const s3 = new S3();
-  const credentials = await s3
-    .getObject({
-      Bucket: process.env.ConfigurationBucketName || "",
-      Key: CREDENTIALS_FILE_NAME,
-    })
-    .promise();
+    const open = async () => {
+      const api = await makeAndroidPublisherApi();
 
-  const credentialsBody = credentials.Body?.toString();
-  console.log("Finished fetch credentials body");
+      if (openEditId) {
+        return openEditId;
+      }
 
-  console.log(`Started writing credentials to ./${CREDENTIALS_FILE_NAME}`);
-  fs.writeFileSync(
-    `${CREDENTIALS_FILE_PATH}/${CREDENTIALS_FILE_NAME}`,
-    credentialsBody
-  );
-  console.log(`Finished writing credentials to ./${CREDENTIALS_FILE_NAME}`);
-};
+      const edit = await api.edits.insert({ packageName });
+
+      openEditId = edit.data.id || "";
+      return openEditId;
+    };
+
+    const close = async (editId: string) => {
+      const api = await makeAndroidPublisherApi();
+      const result = await api.edits.commit({ editId, packageName });
+      openEditId = undefined;
+      return result;
+    };
+
+    return {
+      open,
+      close,
+    };
+  }
+);

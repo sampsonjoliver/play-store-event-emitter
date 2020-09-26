@@ -4,12 +4,12 @@ declare module "dynamodb-toolbox" {
   import { DynamoDB } from "aws-sdk";
   import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
-  export type TableOpts = {
+  export type TableOpts<P extends string, S extends string> = {
     name: string;
-    partitionKey: string;
+    partitionKey: P;
+    sortKey?: S;
     DocumentClient: DynamoDB.DocumentClient;
     alias?: string;
-    sortKey?: string;
     entityField?: boolean | string;
     attributes?: object;
     indexes?: objects;
@@ -18,10 +18,21 @@ declare module "dynamodb-toolbox" {
     removeNullAttributes?: boolean;
   };
 
-  export type EntityOpts<T> = {
+  export declare class Table<P, S> {
+    constructor(opts: TableOpts<P, S>);
+
+    DocumentClient: DocumentClient;
     name: string;
-    attributes: { [key in keyof T]?: EntityAttributeOpts };
-    table: Table;
+  }
+
+  export type EntityType = "string" | "number" | "list" | "map";
+
+  export type EntityOpts<Attrs, P, S> = {
+    name: string;
+    table: Table<P, S>;
+    attributes?: {
+      [key in keyof Attrs]?: EntityAttributeOpts | EntityType;
+    };
     timestamps?: boolean;
     created?: string;
     modified?: string;
@@ -36,21 +47,15 @@ declare module "dynamodb-toolbox" {
     partitionKey?: boolean;
     hidden?: boolean;
     sortKey?: boolean;
-    type?: string;
+    type?: EntityType;
     map?: string;
     alias?: string;
   };
 
-  export declare class Table {
-    constructor(opts: TableOpts);
-
-    DocumentClient: DocumentClient;
-  }
-
   export declare class Entity<T> {
     constructor(opts: EntityOpts<T>);
 
-    put(object: T): Promise;
+    put(object: T): Promise<T>;
     update(object: T): Promise;
     get(object: Partial<T>, { consistent: boolean }): Promise<{ Item: T }>;
     delete(object: Partial<T>): Promise;

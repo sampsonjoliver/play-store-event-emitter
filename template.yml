@@ -31,13 +31,24 @@ Resources:
           Type: Schedule
           Properties:
             Name: PlayStore-app-poll-rate
-            Schedule: rate(5 minutes)
+            Schedule: rate(1 hour)
       MemorySize: 128
       Timeout: 100
       Environment:
         Variables:
           ConfigurationBucketName: !Ref PlayStoreEventEmitterConfigurationBucket
           PackageName: com.sampsonjoliver.acgpwa
+          ReleaseRepositoryTableName: !Ref ReleaseRepositoryTable
       Policies:
         - S3ReadPolicy:
             BucketName: !Ref PlayStoreEventEmitterConfigurationBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReleaseRepositoryTable
+
+  ReleaseRepositoryTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: play-store-event-emitter-app-track-releases
+      PrimaryKey:
+        Name: releaseTrack
+        Type: String

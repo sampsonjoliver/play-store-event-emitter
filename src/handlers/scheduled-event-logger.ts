@@ -1,16 +1,27 @@
-import { ScheduledHandler } from "aws-lambda";
+import { EventBridgeEvent, Handler } from "aws-lambda";
 import { makePlayStoreRepository } from "../repositories/makePlayStoreRepository";
+import { makeReleaseRepository } from "../repositories/makeReleaseRepository";
 
-export const scheduledEventLoggerHandler: ScheduledHandler = async (
-  event,
-  context
-) => {
-  const packageName = "thePackageName";
-  console.info(JSON.stringify(event));
+export const scheduledEventLoggerHandler: Handler<
+  EventBridgeEvent<"Scheduled Event", any>,
+  any
+> = async (event, context) => {
+  const packageName = process.env.PackageName as string;
 
-  const client = makePlayStoreRepository();
+  const playStore = makePlayStoreRepository({ packageName });
+  const releaseDb = makeReleaseRepository();
 
-  const tracks = await client.listTracks();
+  const trackReleases = await playStore.listTrackReleases();
 
-  console.log({ tracks });
+  if (trackReleases.length === 0) {
+    console.log("Missing data", trackReleases);
+    return;
+  }
+
+  const promises = trackReleases.map((release) => {
+    return releaseDb.put(release);
+  });
+
+  const results = await Promise.all(promises);
+  console.log(results);
 };
