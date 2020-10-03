@@ -11,15 +11,15 @@ export type ReleaseUpdateEventTypes =
 
 export type ReleaseUpdateEvent = {
   type: ReleaseUpdateEventTypes;
-  from: Release;
-  to: Release;
+  from?: Release;
+  to?: Release;
 };
 
 export const makeReleaseUpdateEventService = memoize(() => {
   const eventbridge = new EventBridge();
   const sendReleaseEvent = (releaseUpdateEvent: ReleaseUpdateEvent) => {
     const eventBridgePayload = JSON.stringify(releaseUpdateEvent);
-    console.log("Sending event to eventbridge", releaseUpdateEvent);
+
     return eventbridge
       .putEvents({
         Entries: [

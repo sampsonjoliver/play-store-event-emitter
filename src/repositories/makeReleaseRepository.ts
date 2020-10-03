@@ -30,7 +30,7 @@ type ReleaseStatus =
   | "draft"
   | "inProgress"
   | "halted"
-  | "complete";
+  | "completed";
 
 export type Release = {
   releaseId: string;
@@ -48,7 +48,10 @@ export const makeReleaseRepository = () => {
       console.log(release);
       return ReleaseEntity.put(release);
     },
-    decode: (item: any): Release => {
+    decode: (item: any): Release | undefined => {
+      if (!item) {
+        return undefined;
+      }
       const mappedItem = ReleaseEntity.parse(item);
       const parsedItem = DynamoDB.Converter.unmarshall(mappedItem) as Release;
 

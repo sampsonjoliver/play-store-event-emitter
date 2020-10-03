@@ -1,8 +1,5 @@
 import { DynamoDBStreamHandler } from "aws-lambda";
-import {
-  makeReleaseUpdateEventService,
-  ReleaseUpdateEventTypes,
-} from "../repositories/makeReleaseUpdateEventService";
+import { makeReleaseUpdateEventService } from "../repositories/makeReleaseUpdateEventService";
 import { makeReleaseRepository } from "../repositories/makeReleaseRepository";
 
 const WAITING_THRESHOLD_TIME_MS = 2 * 24 * 60 * 60 * 1000;
@@ -23,11 +20,9 @@ export const releaseNotificationHandler: DynamoDBStreamHandler = async (
       newEntry: releaseRepository.decode(record.dynamodb?.NewImage),
     }))
     .map(({ dynamoEventName, oldEntry, newEntry }) => {
-      console.log("Received Record", { dynamoEventName, oldEntry, newEntry });
-
-      const hasStatusChanged = oldEntry.status !== newEntry.status;
+      const hasStatusChanged = oldEntry?.status !== newEntry?.status;
       const hasRolloutPercentChanged =
-        oldEntry.userFraction !== newEntry.userFraction;
+        oldEntry?.userFraction !== newEntry?.userFraction;
 
       const isReleaseWaitingForRollout =
         !hasStatusChanged &&
@@ -35,12 +30,13 @@ export const releaseNotificationHandler: DynamoDBStreamHandler = async (
         isUnchangedForTime(WAITING_THRESHOLD_TIME_MS);
 
       const isReleaseUpdated =
-        newEntry.status !== "complete" && hasRolloutPercentChanged;
+        newEntry?.status !== "completed" && hasRolloutPercentChanged;
 
       const isReleaseCompleted =
-        newEntry.status === "complete" && hasStatusChanged;
+        newEntry?.status === "completed" && hasStatusChanged;
 
-      const isReleaseAborted = newEntry.status === "halted" && hasStatusChanged;
+      const isReleaseAborted =
+        newEntry?.status === "halted" && hasStatusChanged;
 
       if (isReleaseWaitingForRollout) {
         return releaseEventUpdateService.sendReleaseEvent({
@@ -60,7 +56,7 @@ export const releaseNotificationHandler: DynamoDBStreamHandler = async (
 
       if (isReleaseCompleted) {
         return releaseEventUpdateService.sendReleaseEvent({
-          type: "RELEASE_UPDATED",
+          type: "RELEASE_COMPLETE",
           from: oldEntry,
           to: newEntry,
         });
