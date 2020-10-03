@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "play-store-event-emitter:ScheduledEventLogger",
+      "invokeTarget": {
+        "target": "template",
+        "templatePath": "template.yml",
+        "logicalId": "ScheduledEventLogger"
+      },
+      "lambda": {
+        "payload": {},
+        "environmentVariables": {
+          "ConfigurationBucketName": "play-store-event-emitter-us-east-1-627403249094",
+          "PackageName": "com.sampsonjoliver.acgpwa"
+        }
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import { Table, Entity } from "dynamodb-toolbox";
 const DocumentClient = new DynamoDB.DocumentClient();
 
 const ReleasesTable = new Table({
-  name: process.env.ReleaseRepositoryTableName || "",
+  name: process.env.ReleaseRepositoryTableName || "Default",
   partitionKey: "releaseId",
   DocumentClient,
 });
@@ -25,9 +25,16 @@ const ReleaseEntity = new Entity<Release>({
   table: ReleasesTable,
 });
 
+type ReleaseStatus =
+  | "statusUnspecified"
+  | "draft"
+  | "inProgress"
+  | "halted"
+  | "complete";
+
 export type Release = {
   releaseId: string;
-  status: string;
+  status: ReleaseStatus;
   userFraction: number;
   versionCode: string;
   versionName: string;
@@ -40,6 +47,12 @@ export const makeReleaseRepository = () => {
       console.log(`Writing ${release.releaseId} to ${ReleasesTable.name}`);
       console.log(release);
       return ReleaseEntity.put(release);
+    },
+    decode: (item: any): Release => {
+      const mappedItem = ReleaseEntity.parse(item);
+      const parsedItem = DynamoDB.Converter.unmarshall(mappedItem) as Release;
+
+      return parsedItem;
     },
   };
 };

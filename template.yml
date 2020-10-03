@@ -14,6 +14,11 @@ Parameters:
     Description: Yhe package name of the android application to observes
 
 Resources:
+  PlayStoreReleasesEventBus:
+    Type: "AWS::Events::EventBus"
+    Properties:
+      Name: PlayStoreReleasesEventBus
+
   ScheduledEventLogger:
     Type: AWS::Serverless::Function
     Properties:
@@ -41,6 +46,34 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ReleaseRepositoryTable
 
+  ReleaseNotificationHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Sends an event to a configured subscriber when a new release update is received
+      Runtime: nodejs12.x
+      CodeUri: ./dist
+      Handler: handlers/release-notification-handler.releaseNotificationHandler
+    Events:
+      Stream:
+        Type: DynamoDB
+        Properties:
+          Stream: !GetAtt ReleaseRepositoryTable.StreamArn
+          BatchSize: 5
+          StartingPosition: TRIM_HORIZON
+    Policies: AWSLambdaDynamoDBExecutionRole
+    MemorySize: 128
+    Timeout: 100
+
+  PlayStoreEventEmitterConfigurationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "play-store-event-emitter-${AWS::Region}-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    DeletionPolicy: Delete
+
   ReleaseRepositoryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -48,7 +81,8 @@ Resources:
       PrimaryKey:
         Name: releaseId
         Type: String
-        Default: com.sampsonjoliver.acgpwa
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
   PlayStoreEventEmitterConfigurationBucket:
     Type: AWS::S3::Bucket

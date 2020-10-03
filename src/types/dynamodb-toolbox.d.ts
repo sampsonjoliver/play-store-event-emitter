@@ -59,7 +59,7 @@ declare module "dynamodb-toolbox" {
     update(object: T): Promise;
     get(object: Partial<T>, { consistent: boolean }): Promise<{ Item: T }>;
     delete(object: Partial<T>): Promise;
-    parse(entity: any): T;
+    parse(entity: any): any;
     query(partitionKey: string): Promise<{ Count: number; Items: T[] }>;
     scan(partitionKey: string): Promise<{ Count: number; Items: T[] }>;
   }
