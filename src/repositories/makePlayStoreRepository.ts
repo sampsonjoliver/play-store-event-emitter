@@ -38,12 +38,12 @@ export const makePlayStoreRepository = ({
         const activeRelease =
           releaseInfo &&
           ({
-            releaseTrack: trackName,
-            releaseName: `${releaseInfo.name}-${versionCodes}`,
+            releaseId: `${trackName}-${releaseInfo.name}-${versionCodes}`,
             status: releaseInfo.status,
             userFraction: releaseInfo.userFraction,
             versionCode: versionCodes,
             versionName: releaseInfo.name,
+            releaseTrack: trackName,
           } as Release);
 
         return activeRelease;

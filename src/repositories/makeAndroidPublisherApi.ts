@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { S3 } from "aws-sdk";
-import fs from "graceful-fs";
+import { writeFileSync } from "graceful-fs";
 
 import { memoize } from "../memoize";
 
@@ -44,7 +44,7 @@ export const fetchAndSaveCredentialsFile = async () => {
   console.log("Finished fetch credentials body");
 
   console.log(`Started writing credentials to ./${CREDENTIALS_FILE_NAME}`);
-  fs.writeFileSync(
+  writeFileSync(
     `${CREDENTIALS_FILE_PATH}/${CREDENTIALS_FILE_NAME}`,
     credentialsBody
   );

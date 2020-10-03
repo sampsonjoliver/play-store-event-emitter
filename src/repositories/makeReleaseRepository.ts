@@ -5,39 +5,39 @@ const DocumentClient = new DynamoDB.DocumentClient();
 
 const ReleasesTable = new Table({
   name: process.env.ReleaseRepositoryTableName || "",
-  partitionKey: "releaseTrack",
+  partitionKey: "releaseName",
   DocumentClient,
 });
 
 const ReleaseEntity = new Entity<Release>({
   name: "Release",
   attributes: {
-    releaseTrack: {
+    releaseId: {
       partitionKey: true,
       type: "string",
     },
-    releaseName: "string",
     status: "string",
     userFraction: "number",
     versionCode: "string",
     versionName: "string",
+    releaseTrack: "string",
   },
   table: ReleasesTable,
 });
 
 export type Release = {
-  releaseTrack: string;
-  releaseName: string;
+  releaseId: string;
   status: string;
-  versionName: string;
-  versionCode: string;
   userFraction: number;
+  versionCode: string;
+  versionName: string;
+  releaseTrack: string;
 };
 
 export const makeReleaseRepository = () => {
   return {
     put: (release: Release) => {
-      console.log(`Writing ${release.releaseName} to ${ReleasesTable.name}`);
+      console.log(`Writing ${release.releaseId} to ${ReleasesTable.name}`);
       console.log(release);
       return ReleaseEntity.put(release);
     },

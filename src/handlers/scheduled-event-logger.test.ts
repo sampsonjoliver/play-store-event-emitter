@@ -1,20 +1,26 @@
-const mockInsert = jest.fn();
-const mockList = jest.fn();
+const mockPlayStoreListTrackReleases = jest.fn();
 jest.mock("../repositories/makePlayStoreRepository", () => ({
   makePlayStoreRepository: () => ({
-    listTracks: mockList,
+    listTrackReleases: mockPlayStoreListTrackReleases,
   }),
 }));
 
-import * as scheduledEventLogger from "./scheduled-event-logger";
+const mockTablePut = jest.fn();
+jest.mock("../repositories/makeReleaseRepository", () => ({
+  makeReleaseRepository: () => ({
+    put: mockTablePut,
+  }),
+}));
 
-describe("Test for sqs-payload-logger", function () {
-  it("Verifies the payload is logged", async () => {
-    mockInsert.mockResolvedValue({
-      data: {
-        id: "theEditId",
-      },
-    });
+import { scheduledEventLoggerHandler } from "./scheduled-event-logger";
+
+describe("ScheduledPlayStoreScraper", function () {
+  it("Should scrape the play store and write snapshot to table", async () => {
+    mockPlayStoreListTrackReleases.mockResolvedValue([
+      "aRelease",
+      "anotherRelease",
+    ]);
+    mockTablePut.mockResolvedValue({});
 
     var payload = {
       id: "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
@@ -27,8 +33,10 @@ describe("Test for sqs-payload-logger", function () {
       detail: {},
     };
 
-    await scheduledEventLogger.scheduledEventLoggerHandler(payload, null);
+    await scheduledEventLoggerHandler(payload, null);
 
-    expect(mockList).toHaveBeenCalled();
+    expect(mockPlayStoreListTrackReleases).toHaveBeenCalled();
+    expect(mockTablePut).toHaveBeenCalledWith("aRelease");
+    expect(mockTablePut).toHaveBeenCalledWith("anotherRelease");
   });
 });

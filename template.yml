@@ -50,5 +50,5 @@ Resources:
     Properties:
       TableName: play-store-event-emitter-app-track-releases
       PrimaryKey:
-        Name: releaseTrack
+        Name: releaseId
         Type: String
