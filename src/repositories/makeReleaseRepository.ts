@@ -5,7 +5,7 @@ const DocumentClient = new DynamoDB.DocumentClient();
 
 const ReleasesTable = new Table({
   name: process.env.ReleaseRepositoryTableName || "",
-  partitionKey: "releaseName",
+  partitionKey: "releaseId",
   DocumentClient,
 });
 
