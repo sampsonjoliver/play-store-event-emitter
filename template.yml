@@ -8,17 +8,12 @@ Description: >-
 Transform:
   - AWS::Serverless-2016-10-31
 
-Resources:
-  PlayStoreEventEmitterConfigurationBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "play-store-event-emitter-${AWS::Region}-${AWS::AccountId}"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-    DeletionPolicy: Delete
+Parameters:
+  PackageNameParameter:
+    Type: String
+    Description: Yhe package name of the android application to observes
 
+Resources:
   ScheduledEventLogger:
     Type: AWS::Serverless::Function
     Properties:
@@ -37,7 +32,8 @@ Resources:
       Environment:
         Variables:
           ConfigurationBucketName: !Ref PlayStoreEventEmitterConfigurationBucket
-          PackageName: com.sampsonjoliver.acgpwa
+          PackageName:
+            Ref: PackageNameParameter
           ReleaseRepositoryTableName: !Ref ReleaseRepositoryTable
       Policies:
         - S3ReadPolicy:
@@ -48,7 +44,18 @@ Resources:
   ReleaseRepositoryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: play-store-event-emitter-app-track-releases
+      TableName: !Sub psee-${PackageNameParameter}-track-releases
       PrimaryKey:
         Name: releaseId
         Type: String
+        Default: com.sampsonjoliver.acgpwa
+
+  PlayStoreEventEmitterConfigurationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "psee-${PackageNameParameter}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    DeletionPolicy: Delete
