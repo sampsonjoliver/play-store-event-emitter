@@ -12,7 +12,7 @@ jest.mock("../repositories/makeReleaseRepository", () => ({
   }),
 }));
 
-import { scheduledEventLoggerHandler } from "./scheduled-event-logger";
+import { handler } from "./PlayStoreObserverHandler";
 
 describe("ScheduledPlayStoreScraper", function () {
   it("Should scrape the play store and write snapshot to table", async () => {
@@ -33,7 +33,7 @@ describe("ScheduledPlayStoreScraper", function () {
       detail: {},
     };
 
-    await scheduledEventLoggerHandler(payload, null);
+    await handler(payload, null);
 
     expect(mockPlayStoreListTrackReleases).toHaveBeenCalled();
     expect(mockTablePut).toHaveBeenCalledWith("aRelease");

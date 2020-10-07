@@ -4,10 +4,7 @@ import { makeReleaseRepository } from "../repositories/makeReleaseRepository";
 
 const WAITING_THRESHOLD_TIME_MS = 2 * 24 * 60 * 60 * 1000;
 
-export const releaseNotificationHandler: DynamoDBStreamHandler = async (
-  event,
-  context
-) => {
+export const handler: DynamoDBStreamHandler = async (event, context) => {
   const releaseRepository = makeReleaseRepository();
   const releaseEventUpdateService = makeReleaseUpdateEventService();
 
