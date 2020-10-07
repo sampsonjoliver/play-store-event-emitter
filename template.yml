@@ -53,21 +53,22 @@ Resources:
       Runtime: nodejs12.x
       CodeUri: ./dist
       Handler: handlers/ReleaseEventEmitterHandler.handler
-    Events:
-      Stream:
-        Type: DynamoDB
-        Properties:
-          Stream: !GetAtt ReleaseSnapshotsTable.StreamArn
-          BatchSize: 5
-          StartingPosition: TRIM_HORIZON
-    Policies: AWSLambdaDynamoDBExecutionRole
-    MemorySize: 128
-    Timeout: 100
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt ReleaseSnapshotsTable.StreamArn
+            BatchSize: 5
+            StartingPosition: TRIM_HORIZON
+      Policies: AWSLambdaDynamoDBExecutionRole
+      MemorySize: 128
+      Timeout: 100
 
   ReleaseSnapshotsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub psee-${PackageNameParameter}-track-releases
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: releaseId
           AttributeType: S
