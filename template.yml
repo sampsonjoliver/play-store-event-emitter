@@ -11,7 +11,7 @@ Transform:
 Parameters:
   PackageNameParameter:
     Type: String
-    Description: Yhe package name of the android application to observes
+    Description: The package name of the android application to observes
 
 Resources:
   PlayStoreReleasesEventBus:
@@ -63,6 +63,13 @@ Resources:
       Policies: AWSLambdaDynamoDBExecutionRole
       MemorySize: 128
       Timeout: 100
+      Environment:
+        Variables:
+          EventBusName: !Ref PlayStoreReleasesEventBus
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref PlayStoreReleasesEventBus
+
 
   ReleaseSnapshotsTable:
     Type: AWS::DynamoDB::Table
