@@ -1,13 +1,13 @@
 import { DynamoDBStreamHandler } from "aws-lambda";
-import { makeReleaseUpdateEventService } from "../repositories/makeReleaseUpdateEventService";
+import {
+  makeReleaseUpdateEventService,
+  ReleaseUpdateEventTypes,
+} from "../repositories/makeReleaseUpdateEventService";
 import { makeReleaseRepository } from "../repositories/makeReleaseRepository";
 
 const WAITING_THRESHOLD_TIME_MS = 2 * 24 * 60 * 60 * 1000;
 
-export const releaseNotificationHandler: DynamoDBStreamHandler = async (
-  event,
-  context
-) => {
+export const handler: DynamoDBStreamHandler = async (event, context) => {
   const releaseRepository = makeReleaseRepository();
   const releaseEventUpdateService = makeReleaseUpdateEventService();
 
@@ -20,6 +20,7 @@ export const releaseNotificationHandler: DynamoDBStreamHandler = async (
       newEntry: releaseRepository.decode(record.dynamodb?.NewImage),
     }))
     .map(({ dynamoEventName, oldEntry, newEntry }) => {
+      console.log("Received event for", { oldEntry, newEntry });
       const hasStatusChanged = oldEntry?.status !== newEntry?.status;
       const hasRolloutPercentChanged =
         oldEntry?.userFraction !== newEntry?.userFraction;
@@ -38,36 +39,28 @@ export const releaseNotificationHandler: DynamoDBStreamHandler = async (
       const isReleaseAborted =
         newEntry?.status === "halted" && hasStatusChanged;
 
-      if (isReleaseWaitingForRollout) {
+      const sendReleaseEvent = (type: ReleaseUpdateEventTypes) => {
         return releaseEventUpdateService.sendReleaseEvent({
-          type: "RELEASE_WAITING",
+          type,
           from: oldEntry,
           to: newEntry,
         });
+      };
+
+      if (isReleaseWaitingForRollout) {
+        return sendReleaseEvent("NO_CHANGE");
       }
 
       if (isReleaseUpdated) {
-        return releaseEventUpdateService.sendReleaseEvent({
-          type: "RELEASE_UPDATED",
-          from: oldEntry,
-          to: newEntry,
-        });
+        return sendReleaseEvent("RELEASE_UPDATED");
       }
 
       if (isReleaseCompleted) {
-        return releaseEventUpdateService.sendReleaseEvent({
-          type: "RELEASE_COMPLETE",
-          from: oldEntry,
-          to: newEntry,
-        });
+        return sendReleaseEvent("RELEASE_COMPLETE");
       }
 
       if (isReleaseAborted) {
-        return releaseEventUpdateService.sendReleaseEvent({
-          type: "RELEASE_ABORTED",
-          from: oldEntry,
-          to: newEntry,
-        });
+        return sendReleaseEvent("RELEASE_ABORTED");
       }
 
       return Promise.resolve();

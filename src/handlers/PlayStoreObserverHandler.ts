@@ -2,7 +2,7 @@ import { EventBridgeEvent, Handler } from "aws-lambda";
 import { makePlayStoreRepository } from "../repositories/makePlayStoreRepository";
 import { makeReleaseRepository } from "../repositories/makeReleaseRepository";
 
-export const scheduledEventLoggerHandler: Handler<
+export const handler: Handler<
   EventBridgeEvent<"Scheduled Event", any>,
   any
 > = async (event, context) => {

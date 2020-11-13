@@ -6,7 +6,7 @@ import { Release } from "./makeReleaseRepository";
 export type ReleaseUpdateEventTypes =
   | "RELEASE_UPDATED"
   | "RELEASE_COMPLETE"
-  | "RELEASE_WAITING"
+  | "NO_CHANGE"
   | "RELEASE_ABORTED";
 
 export type ReleaseUpdateEvent = {
@@ -18,6 +18,9 @@ export type ReleaseUpdateEvent = {
 export const makeReleaseUpdateEventService = memoize(() => {
   const eventbridge = new EventBridge();
   const sendReleaseEvent = (releaseUpdateEvent: ReleaseUpdateEvent) => {
+    console.log("Emitting event: ", {
+      releaseUpdateEvent,
+    });
     const eventBridgePayload = JSON.stringify(releaseUpdateEvent);
 
     return eventbridge
@@ -25,6 +28,7 @@ export const makeReleaseUpdateEventService = memoize(() => {
         Entries: [
           {
             Detail: eventBridgePayload,
+            EventBusName: process.env.EventBusName,
           },
         ],
       })

@@ -4,7 +4,7 @@ import { Table, Entity } from "dynamodb-toolbox";
 const DocumentClient = new DynamoDB.DocumentClient();
 
 const ReleasesTable = new Table({
-  name: process.env.ReleaseRepositoryTableName || "Default",
+  name: process.env.ReleaseSnapshotsTableName || "Default",
   partitionKey: "releaseId",
   DocumentClient,
 });

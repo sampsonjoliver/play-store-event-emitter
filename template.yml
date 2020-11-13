@@ -11,7 +11,7 @@ Transform:
 Parameters:
   PackageNameParameter:
     Type: String
-    Description: Yhe package name of the android application to observes
+    Description: The package name of the android application to observes
 
 Resources:
   PlayStoreReleasesEventBus:
@@ -19,13 +19,13 @@ Resources:
     Properties:
       Name: PlayStoreReleasesEventBus
 
-  ScheduledEventLogger:
+  PlayStoreObserverHandler:
     Type: AWS::Serverless::Function
     Properties:
       Description: A Lambda function that polls the configured Play Store app to watch for latest updates
       Runtime: nodejs12.x
       CodeUri: ./dist
-      Handler: handlers/scheduled-event-logger.scheduledEventLoggerHandler
+      Handler: handlers/PlayStoreObserverHandler.handler
       Events:
         CloudWatchEvent:
           Type: Schedule
@@ -39,48 +39,49 @@ Resources:
           ConfigurationBucketName: !Ref PlayStoreEventEmitterConfigurationBucket
           PackageName:
             Ref: PackageNameParameter
-          ReleaseRepositoryTableName: !Ref ReleaseRepositoryTable
+          ReleaseSnapshotsTableName: !Ref ReleaseSnapshotsTable
       Policies:
         - S3ReadPolicy:
             BucketName: !Ref PlayStoreEventEmitterConfigurationBucket
         - DynamoDBCrudPolicy:
-            TableName: !Ref ReleaseRepositoryTable
+            TableName: !Ref ReleaseSnapshotsTable
 
-  ReleaseNotificationHandler:
+  ReleaseEventEmitterHandler:
     Type: AWS::Serverless::Function
     Properties:
       Description: Sends an event to a configured subscriber when a new release update is received
       Runtime: nodejs12.x
       CodeUri: ./dist
-      Handler: handlers/release-notification-handler.releaseNotificationHandler
-    Events:
-      Stream:
-        Type: DynamoDB
-        Properties:
-          Stream: !GetAtt ReleaseRepositoryTable.StreamArn
-          BatchSize: 5
-          StartingPosition: TRIM_HORIZON
-    Policies: AWSLambdaDynamoDBExecutionRole
-    MemorySize: 128
-    Timeout: 100
+      Handler: handlers/ReleaseEventEmitterHandler.handler
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt ReleaseSnapshotsTable.StreamArn
+            BatchSize: 5
+            StartingPosition: TRIM_HORIZON
+      Policies: AWSLambdaDynamoDBExecutionRole
+      MemorySize: 128
+      Timeout: 100
+      Environment:
+        Variables:
+          EventBusName: !Ref PlayStoreReleasesEventBus
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref PlayStoreReleasesEventBus
 
-  PlayStoreEventEmitterConfigurationBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "play-store-event-emitter-${AWS::Region}-${AWS::AccountId}"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-    DeletionPolicy: Delete
 
-  ReleaseRepositoryTable:
-    Type: AWS::Serverless::SimpleTable
+  ReleaseSnapshotsTable:
+    Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub psee-${PackageNameParameter}-track-releases
-      PrimaryKey:
-        Name: releaseId
-        Type: String
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: releaseId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: releaseId
+          KeyType: HASH
       StreamSpecification:
         StreamViewType: NEW_IMAGE
 

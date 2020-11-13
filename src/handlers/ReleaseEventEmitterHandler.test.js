@@ -409,7 +409,7 @@ const deletedEvent = {
   },
 };
 
-import { releaseNotificationHandler } from "./release-notification-handler";
+import { handler } from "./ReleaseEventEmitterHandler";
 
 describe("ReleaseNotificationHandler", function () {
   beforeEach(() => {
@@ -420,7 +420,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([newFullRolloutEvent]);
 
     it("Should send an RELEASE_COMPLETE update event", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).toHaveBeenCalled();
       const sentEvent = JSON.parse(
@@ -440,7 +440,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([updatedPartialRolloutEvent]);
 
     it("Should send an RELEASE_UPDATED update event", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).toHaveBeenCalled();
       const sentEvent = JSON.parse(
@@ -466,7 +466,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([updatedFullRolloutEvent]);
 
     it("Should send an RELEASE_COMPLETE update event", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).toHaveBeenCalled();
       const sentEvent = JSON.parse(
@@ -486,7 +486,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([unchangedPartialRolloutEvent]);
 
     it("Should do nothing", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).not.toHaveBeenCalled();
     });
@@ -496,7 +496,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([unchangedCompletedRolloutEvent]);
 
     it("Should do nothing", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).not.toHaveBeenCalled();
     });
@@ -506,7 +506,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([newPartialRollout]);
 
     it("Should send an RELEASE_UPDATED update event", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).toHaveBeenCalled();
       const sentEvent = JSON.parse(
@@ -527,7 +527,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([haltedRollout]);
 
     it("Should send an update event", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).toHaveBeenCalled();
       const sentEvent = JSON.parse(
@@ -553,7 +553,7 @@ describe("ReleaseNotificationHandler", function () {
     const eventData = createStreamEvent([deletedEvent]);
 
     it("Should do nothing at all", async () => {
-      await releaseNotificationHandler(eventData, {});
+      await handler(eventData, {});
 
       expect(mockEventBridgePutEvents).not.toHaveBeenCalled();
     });
