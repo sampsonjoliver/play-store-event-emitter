@@ -48,7 +48,7 @@ export const handler: DynamoDBStreamHandler = async (event, context) => {
       };
 
       if (isReleaseWaitingForRollout) {
-        return sendReleaseEvent("RELEASE_WAITING");
+        return sendReleaseEvent("NO_CHANGE");
       }
 
       if (isReleaseUpdated) {

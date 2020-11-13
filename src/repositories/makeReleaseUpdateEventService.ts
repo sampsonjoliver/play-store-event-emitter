@@ -6,7 +6,7 @@ import { Release } from "./makeReleaseRepository";
 export type ReleaseUpdateEventTypes =
   | "RELEASE_UPDATED"
   | "RELEASE_COMPLETE"
-  | "RELEASE_WAITING"
+  | "NO_CHANGE"
   | "RELEASE_ABORTED";
 
 export type ReleaseUpdateEvent = {
